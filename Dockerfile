@@ -1,5 +1,5 @@
 # Multi-stage build для оптимизации размера образа
-FROM python:3.14-slim AS builder
+FROM python:3.13-slim AS builder
 
 # Установка зависимостей для сборки
 RUN apt-get update && \
@@ -13,7 +13,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Финальный образ
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 # Устанавливаем runtime зависимости для PostgreSQL
 RUN apt-get update && \

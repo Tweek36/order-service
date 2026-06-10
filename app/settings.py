@@ -30,10 +30,20 @@ class Settings(BaseSettings):
         """Alias for X_API_KEY for backward compatibility."""
         return self.X_API_KEY
 
-    # Service URLs
-    CATALOG_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"
-    PAYMENTS_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"
-    NOTIFICATIONS_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"
+    @property
+    def CATALOG_SERVICE_URL(self) -> str:
+        """URL для Catalog Service."""
+        return self.CAPASHINO_BASE_URL
+
+    @property
+    def PAYMENTS_SERVICE_URL(self) -> str:
+        """URL для Payments Service."""
+        return self.CAPASHINO_BASE_URL
+
+    @property
+    def NOTIFICATIONS_SERVICE_URL(self) -> str:
+        """URL для Notifications Service."""
+        return self.CAPASHINO_BASE_URL
 
     # Kafka settings
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka.kafka.svc.cluster.local:9092"

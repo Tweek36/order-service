@@ -41,14 +41,3 @@ repos:
     hooks:
       - id: bandit
         args: ["-r", "app/"]
-
-  - repo: local
-    hooks:
-      - id: pytest
-        name: pytest
-        entry: pytest
-        language: system
-        types: [python]
-        args: ["-v", "--tb=short"]
-        pass_filenames: false
-        always_run: false

@@ -7,12 +7,6 @@ app = FastAPI(
 )
 
 
-@app.get("/")
-async def root():
-    """Корневой эндпоинт для проверки работоспособности API."""
-    return {"message": "Order Service API работает"}
-
-
 @app.get("/health")
 async def health_check():
     """Проверка здоровья сервиса."""

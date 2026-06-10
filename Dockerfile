@@ -36,6 +36,10 @@ WORKDIR /app
 COPY --chown=appuser:appuser app /app/app
 COPY --chown=appuser:appuser alembic /app/alembic
 COPY --chown=appuser:appuser alembic.ini /app/alembic.ini
+COPY --chown=appuser:appuser entrypoint.sh /app/entrypoint.sh
+
+# Делаем entrypoint исполняемым
+RUN chmod +x /app/entrypoint.sh
 
 # Переключаемся на непривилегированного пользователя
 USER appuser
@@ -43,5 +47,5 @@ USER appuser
 # Открываем порт
 EXPOSE 8000
 
-# Запускаем приложение
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Запускаем приложение через entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]

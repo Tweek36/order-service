@@ -23,7 +23,12 @@ class Settings(BaseSettings):
 
     # Capashino settings
     CAPASHINO_BASE_URL: str = "https://capashino.dev-2.python-labs.ru"
-    API_TOKEN: str = "test_api_key"
+    X_API_KEY: str = "test_api_key"
+
+    @property
+    def API_TOKEN(self) -> str:
+        """Alias for X_API_KEY for backward compatibility."""
+        return self.X_API_KEY
 
     # Service URLs
     CATALOG_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"

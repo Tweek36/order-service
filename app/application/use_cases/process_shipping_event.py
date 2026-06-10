@@ -51,7 +51,7 @@ class ProcessShippingEventUseCase:
         is_new = await self.inbox_repository.save_event(
             event_id=idempotency_key,
             event_type=event.event_type,
-            payload=event.model_dump(),
+            payload=event.model_dump(mode="json"),
         )
 
         if not is_new:
@@ -130,7 +130,7 @@ class ProcessShippingEventUseCase:
         is_new = await self.inbox_repository.save_event(
             event_id=idempotency_key,
             event_type=event.event_type,
-            payload=event.model_dump(),
+            payload=event.model_dump(mode="json"),
         )
 
         if not is_new:

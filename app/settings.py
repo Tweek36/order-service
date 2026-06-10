@@ -48,7 +48,13 @@ class Settings(BaseSettings):
     def database_url(self) -> str:
         """Получить URL для подключения к базе данных."""
         if self.POSTGRES_CONNECTION_STRING:
-            return self.POSTGRES_CONNECTION_STRING
+            # Заменяем postgres:// на postgresql+asyncpg:// для asyncpg драйвера
+            connection_string = self.POSTGRES_CONNECTION_STRING
+            if connection_string.startswith("postgres://"):
+                connection_string = connection_string.replace(
+                    "postgres://", "postgresql+asyncpg://", 1
+                )
+            return connection_string
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USERNAME}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DATABASE_NAME}"

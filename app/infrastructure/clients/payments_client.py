@@ -29,7 +29,7 @@ class PaymentsClient(BaseHTTPClient):
     """Клиент для взаимодействия с Payments Service."""
 
     def __init__(self):
-        super().__init__(settings.CAPASHINO_BASE_URL, settings.X_API_KEY)
+        super().__init__(settings.PAYMENTS_SERVICE_URL, settings.API_TOKEN)
 
     async def create_payment(
         self,

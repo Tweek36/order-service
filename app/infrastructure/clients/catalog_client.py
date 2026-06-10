@@ -28,7 +28,7 @@ class CatalogClient(BaseHTTPClient):
     """Клиент для взаимодействия с Catalog Service."""
 
     def __init__(self):
-        super().__init__(settings.CAPASHINO_BASE_URL, settings.X_API_KEY)
+        super().__init__(settings.CATALOG_SERVICE_URL, settings.API_TOKEN)
 
     async def get_item(self, item_id: UUID) -> CatalogItem:
         """Получить товар по ID.

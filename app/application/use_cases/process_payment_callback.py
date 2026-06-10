@@ -6,6 +6,7 @@ import structlog
 
 from app.domain.exceptions import OrderNotFoundError
 from app.domain.repositories.order_repository import IOrderRepository
+from app.infrastructure.clients.notifications_client import NotificationsClient
 from app.infrastructure.database.repositories.outbox_repository import OutboxRepository
 
 logger = structlog.get_logger(__name__)
@@ -18,9 +19,11 @@ class ProcessPaymentCallbackUseCase:
         self,
         order_repository: IOrderRepository,
         outbox_repository: OutboxRepository,
+        notifications_client: NotificationsClient,
     ):
         self.order_repository = order_repository
         self.outbox_repository = outbox_repository
+        self.notifications_client = notifications_client
 
     async def execute(
         self,
@@ -86,6 +89,20 @@ class ProcessPaymentCallbackUseCase:
                     },
                 )
 
+                # Отправляем уведомление об успешной оплате
+                try:
+                    await self.notifications_client.send_notification(
+                        message="Ваш заказ успешно оплачен и готов к отправке",
+                        reference_id=order.id,
+                        idempotency_key=f"order-paid-{order.id}",
+                    )
+                except Exception as e:
+                    await logger.awarning(
+                        "notification_send_failed_on_order_paid",
+                        order_id=str(order_id),
+                        error=str(e),
+                    )
+
                 await logger.ainfo(
                     "order_marked_as_paid",
                     order_id=str(order_id),
@@ -103,6 +120,21 @@ class ProcessPaymentCallbackUseCase:
             try:
                 order.mark_as_cancelled()
                 await self.order_repository.update(order)
+                # Отправляем уведомление об отмене
+                try:
+                    cancel_reason = error_message or "Платеж не прошел"
+                    await self.notifications_client.send_notification(
+                        message=f"Ваш заказ отменен. Причина: {cancel_reason}",
+                        reference_id=order.id,
+                        idempotency_key=f"order-cancelled-payment-{order.id}",
+                    )
+                except Exception as e:
+                    await logger.awarning(
+                        "notification_send_failed_on_order_cancelled",
+                        order_id=str(order_id),
+                        error=str(e),
+                    )
+
                 await logger.ainfo(
                     "order_cancelled_due_to_failed_payment",
                     order_id=str(order_id),

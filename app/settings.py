@@ -23,7 +23,12 @@ class Settings(BaseSettings):
 
     # Capashino settings
     CAPASHINO_BASE_URL: str = "https://capashino.dev-2.python-labs.ru"
-    X_API_KEY: str = "test_api_key"
+    API_TOKEN: str = "test_api_key"
+
+    # Service URLs
+    CATALOG_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"
+    PAYMENTS_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"
+    NOTIFICATIONS_SERVICE_URL: str = "https://capashino.dev-2.python-labs.ru"
 
     # Kafka settings
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka.kafka.svc.cluster.local:9092"

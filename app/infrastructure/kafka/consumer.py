@@ -13,6 +13,7 @@ from app.application.dto.shipping_event_dto import (
 from app.application.use_cases.process_shipping_event import (
     ProcessShippingEventUseCase,
 )
+from app.infrastructure.clients.notifications_client import NotificationsClient
 from app.infrastructure.database.repositories.inbox_repository import InboxRepository
 from app.infrastructure.database.repositories.order_repository_impl import (
     OrderRepositoryImpl,
@@ -110,7 +111,10 @@ class KafkaConsumer:
         async with async_session_maker() as session:
             order_repo = OrderRepositoryImpl(session)
             inbox_repo = InboxRepository(session)
-            use_case = ProcessShippingEventUseCase(order_repo, inbox_repo)
+            notifications_client = NotificationsClient()
+            use_case = ProcessShippingEventUseCase(
+                order_repo, inbox_repo, notifications_client
+            )
 
             try:
                 if event_type == "order.shipped":

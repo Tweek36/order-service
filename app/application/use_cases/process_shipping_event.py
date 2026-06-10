@@ -8,6 +8,7 @@ from app.application.dto.shipping_event_dto import (
 )
 from app.domain.exceptions import OrderNotFoundError
 from app.domain.repositories.order_repository import IOrderRepository
+from app.infrastructure.clients.notifications_client import NotificationsClient
 from app.infrastructure.database.repositories.inbox_repository import InboxRepository
 
 logger = structlog.get_logger(__name__)
@@ -20,9 +21,11 @@ class ProcessShippingEventUseCase:
         self,
         order_repository: IOrderRepository,
         inbox_repository: InboxRepository,
+        notifications_client: NotificationsClient,
     ):
         self.order_repository = order_repository
         self.inbox_repository = inbox_repository
+        self.notifications_client = notifications_client
 
     async def process_order_shipped(
         self,
@@ -75,6 +78,20 @@ class ProcessShippingEventUseCase:
 
             # Отмечаем событие как обработанное
             await self.inbox_repository.mark_as_processed(idempotency_key)
+
+            # Отправляем уведомление об отправке
+            try:
+                await self.notifications_client.send_notification(
+                    message="Ваш заказ отправлен в доставку",
+                    reference_id=order.id,
+                    idempotency_key=f"order-shipped-{order.id}",
+                )
+            except Exception as e:
+                await logger.awarning(
+                    "notification_send_failed_on_order_shipped",
+                    order_id=str(event.order_id),
+                    error=str(e),
+                )
 
             await logger.ainfo(
                 "order_marked_as_shipped",
@@ -140,6 +157,20 @@ class ProcessShippingEventUseCase:
 
             # Отмечаем событие как обработанное
             await self.inbox_repository.mark_as_processed(idempotency_key)
+
+            # Отправляем уведомление об отмене
+            try:
+                await self.notifications_client.send_notification(
+                    message=f"Ваш заказ отменен. Причина: {event.reason}",
+                    reference_id=order.id,
+                    idempotency_key=f"order-cancelled-shipping-{order.id}",
+                )
+            except Exception as e:
+                await logger.awarning(
+                    "notification_send_failed_on_order_cancelled_from_shipping",
+                    order_id=str(event.order_id),
+                    error=str(e),
+                )
 
             await logger.ainfo(
                 "order_marked_as_cancelled_from_shipping",

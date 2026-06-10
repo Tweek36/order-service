@@ -12,6 +12,7 @@ from app.domain.exceptions import InsufficientStockError
 from app.domain.models.order import Order
 from app.domain.repositories.order_repository import IOrderRepository
 from app.infrastructure.clients.catalog_client import CatalogClient
+from app.infrastructure.clients.notifications_client import NotificationsClient
 from app.infrastructure.clients.payments_client import PaymentsClient
 from app.settings import get_settings
 
@@ -27,10 +28,12 @@ class CreateOrderUseCase:
         order_repository: IOrderRepository,
         catalog_client: CatalogClient,
         payments_client: PaymentsClient,
+        notifications_client: NotificationsClient,
     ):
         self.order_repository = order_repository
         self.catalog_client = catalog_client
         self.payments_client = payments_client
+        self.notifications_client = notifications_client
 
     async def execute(self, dto: CreateOrderDTO) -> OrderDTO:
         """Создать новый заказ.
@@ -89,6 +92,21 @@ class CreateOrderUseCase:
             order_id=str(order.id),
             status=order.status.value,
         )
+
+        # Отправляем уведомление о создании заказа
+        try:
+            await self.notifications_client.send_notification(
+                message="Ваш заказ создан и ожидает оплаты",
+                reference_id=order.id,
+                idempotency_key=f"order-created-{order.id}",
+            )
+        except Exception as e:
+            # Не блокируем процесс, только логируем
+            await logger.awarning(
+                "notification_send_failed_on_order_created",
+                order_id=str(order.id),
+                error=str(e),
+            )
 
         # Создаем платеж через Payments Service
         try:

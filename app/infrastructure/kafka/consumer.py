@@ -120,12 +120,14 @@ class KafkaConsumer:
                 if event_type == "order.shipped":
                     event = OrderShippedEventDTO(**event_data)
                     # Используем order_id и shipment_id для идемпотентности
-                    idempotency_key = f"shipped-{event.order_id}-{event.shipment_id}"
+                    idempotency_key = (
+                        f"shipped-{str(event.order_id)}-{str(event.shipment_id)}"
+                    )
                     await use_case.process_order_shipped(event, idempotency_key)
                 elif event_type == "order.cancelled":
                     event = OrderCancelledEventDTO(**event_data)
                     # Используем order_id для идемпотентности
-                    idempotency_key = f"cancelled-{event.order_id}"
+                    idempotency_key = f"cancelled-{str(event.order_id)}"
                     await use_case.process_order_cancelled(event, idempotency_key)
                 else:
                     await logger.awarning(

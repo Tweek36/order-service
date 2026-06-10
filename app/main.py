@@ -6,6 +6,15 @@ import structlog
 from fastapi import FastAPI
 
 from app.infrastructure.database.session import close_db, init_db
+from app.infrastructure.kafka.consumer import (
+    start_kafka_consumer,
+    stop_kafka_consumer,
+)
+from app.infrastructure.kafka.outbox_publisher import (
+    start_outbox_publisher,
+    stop_outbox_publisher,
+)
+from app.infrastructure.kafka.producer import shutdown_kafka_producer
 from app.infrastructure.logging.config import configure_logging
 from app.infrastructure.logging.middleware import RequestLoggingMiddleware
 from app.presentation.api.v1 import orders
@@ -28,10 +37,29 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         await logger.aerror("database_init_failed", error=str(e))
 
+    # Запускаем Kafka consumer и outbox publisher
+    try:
+        await start_kafka_consumer()
+        await logger.ainfo("kafka_consumer_initialized")
+    except Exception as e:
+        await logger.aerror("kafka_consumer_init_failed", error=str(e))
+
+    try:
+        await start_outbox_publisher()
+        await logger.ainfo("outbox_publisher_initialized")
+    except Exception as e:
+        await logger.aerror("outbox_publisher_init_failed", error=str(e))
+
     yield
 
     # Shutdown
     await logger.ainfo("application_shutting_down")
+
+    # Останавливаем Kafka компоненты
+    await stop_kafka_consumer()
+    await stop_outbox_publisher()
+    await shutdown_kafka_producer()
+
     await close_db()
 
 

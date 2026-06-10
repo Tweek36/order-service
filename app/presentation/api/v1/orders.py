@@ -24,6 +24,7 @@ from app.infrastructure.database.session import get_async_session
 from app.presentation.api.dependencies import (
     get_create_order_use_case,
     get_order_repository,
+    get_process_payment_callback_use_case,
 )
 from app.presentation.schemas.order_schema import CreateOrderRequest, OrderResponse
 
@@ -128,13 +129,14 @@ async def get_order(
 @router.post("/payment-callback", status_code=status.HTTP_200_OK)
 async def payment_callback(
     callback_data: PaymentCallbackDTO,
-    order_repo: Annotated[IOrderRepository, Depends(get_order_repository)],
+    use_case: Annotated[
+        ProcessPaymentCallbackUseCase,
+        Depends(get_process_payment_callback_use_case),
+    ],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> dict:
     """Обработать callback от Payments Service."""
     try:
-        use_case = ProcessPaymentCallbackUseCase(order_repository=order_repo)
-
         await use_case.execute(
             payment_id=callback_data.payment_id,
             order_id=callback_data.order_id,

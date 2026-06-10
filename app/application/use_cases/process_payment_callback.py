@@ -6,6 +6,7 @@ import structlog
 
 from app.domain.exceptions import OrderNotFoundError
 from app.domain.repositories.order_repository import IOrderRepository
+from app.infrastructure.database.repositories.outbox_repository import OutboxRepository
 
 logger = structlog.get_logger(__name__)
 
@@ -13,8 +14,13 @@ logger = structlog.get_logger(__name__)
 class ProcessPaymentCallbackUseCase:
     """Use case для обработки результатов платежа."""
 
-    def __init__(self, order_repository: IOrderRepository):
+    def __init__(
+        self,
+        order_repository: IOrderRepository,
+        outbox_repository: OutboxRepository,
+    ):
         self.order_repository = order_repository
+        self.outbox_repository = outbox_repository
 
     async def execute(
         self,
@@ -67,6 +73,19 @@ class ProcessPaymentCallbackUseCase:
             try:
                 order.mark_as_paid()
                 await self.order_repository.update(order)
+
+                # Сохраняем событие ORDER.PAID в outbox для отправки в Shipping Service
+                await self.outbox_repository.save_event(
+                    aggregate_id=order.id,
+                    event_type="order.paid",
+                    payload={
+                        "order_id": str(order.id),
+                        "item_id": str(order.item_id),
+                        "quantity": order.quantity,
+                        "idempotency_key": f"order-paid-{order.id}",
+                    },
+                )
+
                 await logger.ainfo(
                     "order_marked_as_paid",
                     order_id=str(order_id),

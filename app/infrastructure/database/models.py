@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -45,3 +45,38 @@ class IdempotencyKeyORM(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
     )
+
+
+class OutboxEventORM(Base):
+    """ORM модель для outbox событий."""
+
+    __tablename__ = "outbox_events"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    aggregate_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=False, index=True
+    )
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    published: Mapped[bool] = mapped_column(nullable=False, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, index=True
+    )
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class InboxEventORM(Base):
+    """ORM модель для inbox событий."""
+
+    __tablename__ = "inbox_events"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    processed: Mapped[bool] = mapped_column(nullable=False, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

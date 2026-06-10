@@ -23,8 +23,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Lint with ruff
-        run: ruff check .
+      - name: Lint with flake8
+        run: flake8 app tests --max-line-length=88 --extend-ignore=E203
 
       - name: Test with pytest
         run: pytest

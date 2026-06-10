@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     KAFKA_CONSUMER_GROUP: str = "order-service-group"
 
     # Service settings
-    SERVICE_NAME: str = "order-service"
+    SERVICE_NAME: str = "student-tweek36-order-service-web"
     SERVICE_NAMESPACE: str = "student-tweek36-order-service"
     SERVICE_PORT: int = 8000
 

@@ -16,14 +16,14 @@ class Settings(BaseSettings):
     # PostgreSQL settings
     POSTGRES_HOST: str = "postgres-postgresql.postgres.svc"
     POSTGRES_PORT: int = 5432
-    POSTGRES_USERNAME: str
-    POSTGRES_PASSWORD: str
+    POSTGRES_USERNAME: str = "test_user"
+    POSTGRES_PASSWORD: str = "test_password"
     POSTGRES_DATABASE_NAME: str = "student_Tweek36-order-service-postgres"
     POSTGRES_CONNECTION_STRING: str | None = None
 
     # Capashino settings
     CAPASHINO_BASE_URL: str = "https://capashino.dev-2.python-labs.ru"
-    X_API_KEY: str
+    X_API_KEY: str = "test_api_key"
 
     # Kafka settings
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka.kafka.svc.cluster.local:9092"

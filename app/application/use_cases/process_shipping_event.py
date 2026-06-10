@@ -82,9 +82,9 @@ class ProcessShippingEventUseCase:
             # Отправляем уведомление об отправке
             try:
                 await self.notifications_client.send_notification(
-                    message="Your order shipped",
+                    message="SHIPPED",
                     reference_id=order.id,
-                    idempotency_key=f"order-shipped-{order.id}",
+                    idempotency_key=idempotency_key,
                 )
             except Exception as e:
                 await logger.awarning(

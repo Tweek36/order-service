@@ -92,7 +92,7 @@ class ProcessPaymentCallbackUseCase:
                 # Отправляем уведомление об успешной оплате
                 try:
                     await self.notifications_client.send_notification(
-                        message="Your order paid",
+                        message="PAID",
                         reference_id=order.id,
                         idempotency_key=f"order-paid-{order.id}",
                     )

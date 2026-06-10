@@ -96,7 +96,7 @@ class CreateOrderUseCase:
         # Отправляем уведомление о создании заказа
         try:
             await self.notifications_client.send_notification(
-                message="Order created",
+                message="NEW",
                 reference_id=order.id,
                 idempotency_key=f"order-created-{order.id}",
             )

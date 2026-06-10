@@ -10,7 +10,7 @@ RUN apt-get update && \
 
 # Копируем requirements и устанавливаем зависимости
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Финальный образ
 FROM python:3.13-slim
@@ -26,16 +26,16 @@ RUN addgroup --system --gid 1000 appuser && \
     adduser --system --uid 1000 --ingroup appuser appuser
 
 # Копируем установленные зависимости из builder stage
-COPY --from=builder /root/.local /home/appuser/.local
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем код приложения
+# Копируем код приложения и конфигурацию alembic
 COPY --chown=appuser:appuser app /app/app
-
-# Добавляем пользовательские пакеты в PATH
-ENV PATH=/home/appuser/.local/bin:$PATH
+COPY --chown=appuser:appuser alembic /app/alembic
+COPY --chown=appuser:appuser alembic.ini /app/alembic.ini
 
 # Переключаемся на непривилегированного пользователя
 USER appuser

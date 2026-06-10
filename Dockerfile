@@ -5,6 +5,7 @@ FROM python:3.14-slim AS builder
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Копируем requirements и устанавливаем зависимости
@@ -13,6 +14,12 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Финальный образ
 FROM python:3.14-slim
+
+# Устанавливаем runtime зависимости для PostgreSQL
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Создаем системную группу и пользователя
 RUN addgroup --system --gid 1000 appuser && \

@@ -92,10 +92,7 @@ class ProcessPaymentCallbackUseCase:
                 # Отправляем уведомление об успешной оплате
                 try:
                     await self.notifications_client.send_notification(
-                        message=(
-                            "Order PAID: Your order has been successfully "
-                            "paid and is ready for shipment"
-                        ),
+                        message="Your order paid",
                         reference_id=order.id,
                         idempotency_key=f"order-paid-{order.id}",
                     )
@@ -127,7 +124,7 @@ class ProcessPaymentCallbackUseCase:
                 try:
                     cancel_reason = error_message or "Платеж не прошел"
                     await self.notifications_client.send_notification(
-                        message=f"Order cancelled. Reason: {cancel_reason}",
+                        message=f"Order cancelled: {cancel_reason}",
                         reference_id=order.id,
                         idempotency_key=f"order-cancelled-payment-{order.id}",
                     )

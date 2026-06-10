@@ -82,7 +82,7 @@ class ProcessShippingEventUseCase:
             # Отправляем уведомление об отправке
             try:
                 await self.notifications_client.send_notification(
-                    message="Ваш заказ отправлен в доставку",
+                    message="Order SHIPPED: Your order has been shipped for delivery",
                     reference_id=order.id,
                     idempotency_key=f"order-shipped-{order.id}",
                 )
@@ -161,7 +161,7 @@ class ProcessShippingEventUseCase:
             # Отправляем уведомление об отмене
             try:
                 await self.notifications_client.send_notification(
-                    message=f"Ваш заказ отменен. Причина: {event.reason}",
+                    message=f"Order cancelled. Reason: {event.reason}",
                     reference_id=order.id,
                     idempotency_key=f"order-cancelled-shipping-{order.id}",
                 )

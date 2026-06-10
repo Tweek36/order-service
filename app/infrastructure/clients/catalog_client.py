@@ -64,3 +64,52 @@ class CatalogClient(BaseHTTPClient):
                 error=str(e),
             )
             raise ItemNotFoundError(str(item_id)) from e
+
+    async def get_item_by_name(self, item_name: str) -> CatalogItem:
+        """Получить товар по названию.
+
+        Args:
+            item_name: Название товара
+
+        Returns:
+            Информация о товаре
+
+        Raises:
+            ItemNotFoundError: Если товар не найден
+        """
+        try:
+            # Получаем список всех товаров и ищем по имени
+            data = await self._get("/api/catalog/items")
+            items = data.get("items", [])
+
+            for item_data in items:
+                if item_data["name"] == item_name:
+                    await logger.ainfo(
+                        "catalog_item_retrieved_by_name",
+                        item_name=item_name,
+                        item_id=item_data["id"],
+                        available_qty=item_data["available_qty"],
+                    )
+
+                    return CatalogItem(
+                        id=UUID(item_data["id"]),
+                        name=item_data["name"],
+                        price=Decimal(item_data["price"]),
+                        available_qty=item_data["available_qty"],
+                    )
+
+            # Товар не найден
+            await logger.aerror(
+                "catalog_item_not_found_by_name",
+                item_name=item_name,
+            )
+            raise ItemNotFoundError(item_name)
+        except ItemNotFoundError:
+            raise
+        except Exception as e:
+            await logger.aerror(
+                "catalog_item_search_failed",
+                item_name=item_name,
+                error=str(e),
+            )
+            raise ItemNotFoundError(item_name) from e

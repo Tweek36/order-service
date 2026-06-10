@@ -40,9 +40,24 @@ async def create_order(
 ) -> OrderResponse:
     """Создать новый заказ."""
     try:
+        # Если передан item_name вместо item_id, найдем товар по имени
+        item_id = request.item_id
+        if not item_id and request.item_name:
+            from app.infrastructure.clients.catalog_client import CatalogClient
+
+            catalog_client = CatalogClient()
+            catalog_item = await catalog_client.get_item_by_name(request.item_name)
+            item_id = catalog_item.id
+
+        if not item_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either item_id or item_name must be provided",
+            )
+
         dto = CreateOrderDTO(
             user_id=request.user_id,
-            item_id=request.item_id,
+            item_id=item_id,
             quantity=request.quantity,
             idempotency_key=request.idempotency_key,
         )
@@ -75,12 +90,35 @@ async def create_order(
             ),
         )
     except DuplicateOrderError as e:
-        await logger.awarning("duplicate_order", error=str(e))
+        # Для идемпотентности возвращаем существующий заказ с кодом 201
+        await logger.ainfo(
+            "returning_existing_order_for_idempotency",
+            idempotency_key=e.idempotency_key,
+            order_id=e.existing_order_id,
+        )
+        # Получаем существующий заказ из репозитория напрямую
+        from app.infrastructure.database.repositories.order_repository_impl import (
+            OrderRepositoryImpl,
+        )
+
+        order_repo = OrderRepositoryImpl(session)
+        existing_order = await order_repo.get_by_id(UUID(e.existing_order_id))
+
+        if existing_order:
+            return OrderResponse(
+                id=existing_order.id,
+                user_id=existing_order.user_id,
+                item_id=existing_order.item_id,
+                quantity=existing_order.quantity,
+                status=existing_order.status,
+                created_at=existing_order.created_at,
+                updated_at=existing_order.updated_at,
+            )
+
+        # Если заказ почему-то не найден, возвращаем ошибку
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Order with idempotency key {e.idempotency_key} " f"already exists"
-            ),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Order exists but could not be retrieved",
         )
     except Exception as e:
         await session.rollback()

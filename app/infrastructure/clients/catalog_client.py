@@ -79,8 +79,11 @@ class CatalogClient(BaseHTTPClient):
         """
         try:
             # Получаем список всех товаров и ищем по имени
-            data = await self._get("/api/catalog/items")
-            items = data.get("items", [])
+            items = await self._get("/api/catalog/items")
+
+            # API возвращает массив напрямую
+            if not isinstance(items, list):
+                raise ItemNotFoundError(item_name)
 
             for item_data in items:
                 if item_data["name"] == item_name:

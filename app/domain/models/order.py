@@ -18,6 +18,7 @@ class Order:
     status: OrderStatus
     created_at: datetime
     updated_at: datetime
+    payment_id: UUID | None = None
 
     def can_be_cancelled(self) -> bool:
         """Проверить, можно ли отменить заказ."""

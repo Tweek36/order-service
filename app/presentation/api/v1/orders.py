@@ -8,7 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dto.order_dto import CreateOrderDTO
+from app.application.dto.payment_callback_dto import PaymentCallbackDTO
 from app.application.use_cases.create_order import CreateOrderUseCase
+from app.application.use_cases.process_payment_callback import (
+    ProcessPaymentCallbackUseCase,
+)
 from app.domain.exceptions import (
     DuplicateOrderError,
     InsufficientStockError,
@@ -118,4 +122,53 @@ async def get_order(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get order",
+        )
+
+
+@router.post("/payment-callback", status_code=status.HTTP_200_OK)
+async def payment_callback(
+    callback_data: PaymentCallbackDTO,
+    order_repo: Annotated[IOrderRepository, Depends(get_order_repository)],
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> dict:
+    """Обработать callback от Payments Service."""
+    try:
+        use_case = ProcessPaymentCallbackUseCase(order_repository=order_repo)
+
+        await use_case.execute(
+            payment_id=callback_data.payment_id,
+            order_id=callback_data.order_id,
+            status=callback_data.status,
+            error_message=callback_data.error_message,
+        )
+
+        await session.commit()
+
+        await logger.ainfo(
+            "payment_callback_processed",
+            payment_id=str(callback_data.payment_id),
+            order_id=str(callback_data.order_id),
+            status=callback_data.status,
+        )
+
+        return {"status": "ok"}
+    except OrderNotFoundError:
+        await logger.aerror(
+            "order_not_found_in_callback",
+            order_id=str(callback_data.order_id),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order {callback_data.order_id} not found",
+        )
+    except Exception as e:
+        await session.rollback()
+        await logger.aerror(
+            "payment_callback_failed",
+            error=str(e),
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process payment callback",
         )

@@ -1,6 +1,7 @@
 """Use case для создания заказа."""
 
 from datetime import datetime
+from decimal import Decimal
 from uuid import uuid4
 
 import structlog
@@ -11,8 +12,11 @@ from app.domain.exceptions import InsufficientStockError
 from app.domain.models.order import Order
 from app.domain.repositories.order_repository import IOrderRepository
 from app.infrastructure.clients.catalog_client import CatalogClient
+from app.infrastructure.clients.payments_client import PaymentsClient
+from app.settings import get_settings
 
 logger = structlog.get_logger(__name__)
+settings = get_settings()
 
 
 class CreateOrderUseCase:
@@ -22,9 +26,11 @@ class CreateOrderUseCase:
         self,
         order_repository: IOrderRepository,
         catalog_client: CatalogClient,
+        payments_client: PaymentsClient,
     ):
         self.order_repository = order_repository
         self.catalog_client = catalog_client
+        self.payments_client = payments_client
 
     async def execute(self, dto: CreateOrderDTO) -> OrderDTO:
         """Создать новый заказ.
@@ -83,6 +89,39 @@ class CreateOrderUseCase:
             order_id=str(order.id),
             status=order.status.value,
         )
+
+        # Создаем платеж через Payments Service
+        try:
+            # Рассчитываем сумму платежа
+            amount = Decimal(catalog_item.price) * dto.quantity
+
+            payment = await self.payments_client.create_payment(
+                order_id=order.id,
+                amount=amount,
+                callback_url=settings.callback_url,
+                idempotency_key=dto.idempotency_key,
+            )
+
+            # Сохраняем payment_id в заказе
+            order.payment_id = payment.id
+            order = await self.order_repository.update(order)
+
+            await logger.ainfo(
+                "payment_created",
+                order_id=str(order.id),
+                payment_id=str(payment.id),
+                amount=amount,
+            )
+        except Exception as e:
+            # Если не удалось создать платеж, отменяем заказ
+            await logger.aerror(
+                "payment_creation_failed",
+                order_id=str(order.id),
+                error=str(e),
+            )
+            order.mark_as_cancelled()
+            await self.order_repository.update(order)
+            raise
 
         return OrderDTO(
             id=order.id,

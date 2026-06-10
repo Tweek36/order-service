@@ -22,6 +22,9 @@ class OrderORM(Base):
     item_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    payment_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=datetime.utcnow
     )

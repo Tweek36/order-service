@@ -51,6 +51,7 @@ class OrderRepositoryImpl(IOrderRepository):
             item_id=order.item_id,
             quantity=order.quantity,
             status=order.status.value,
+            payment_id=order.payment_id,
             created_at=order.created_at,
             updated_at=order.updated_at,
         )
@@ -124,6 +125,7 @@ class OrderRepositoryImpl(IOrderRepository):
 
         if order_orm:
             order_orm.status = order.status.value
+            order_orm.payment_id = order.payment_id
             order_orm.updated_at = order.updated_at
             await self.session.flush()
 
@@ -152,4 +154,5 @@ class OrderRepositoryImpl(IOrderRepository):
             status=OrderStatus(order_orm.status),
             created_at=order_orm.created_at,
             updated_at=order_orm.updated_at,
+            payment_id=order_orm.payment_id,
         )

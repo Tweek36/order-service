@@ -21,14 +21,40 @@ class Settings(BaseSettings):
     POSTGRES_DATABASE_NAME: str = "student_Tweek36-order-service-postgres"
     POSTGRES_CONNECTION_STRING: str | None = None
 
+    # Capashino settings
+    CAPASHINO_BASE_URL: str = "https://capashino.dev-2.python-labs.ru"
+    X_API_KEY: str
+
+    # Kafka settings
+    KAFKA_BOOTSTRAP_SERVERS: str = "kafka.kafka.svc.cluster.local:9092"
+    KAFKA_ORDER_EVENTS_TOPIC: str = "student_system-order.events"
+    KAFKA_SHIPMENT_EVENTS_TOPIC: str = "student_system-shipment.events"
+    KAFKA_CONSUMER_GROUP: str = "order-service-group"
+
+    # Service settings
+    SERVICE_NAME: str = "order-service"
+    SERVICE_NAMESPACE: str = "student-tweek36-order-service"
+    SERVICE_PORT: int = 8000
+
+    # Logging
+    LOG_LEVEL: str = "INFO"
+
     @property
     def database_url(self) -> str:
         """Получить URL для подключения к базе данных."""
         if self.POSTGRES_CONNECTION_STRING:
             return self.POSTGRES_CONNECTION_STRING
         return (
-            f"postgresql://{self.POSTGRES_USERNAME}:{self.POSTGRES_PASSWORD}"
+            f"postgresql+asyncpg://{self.POSTGRES_USERNAME}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DATABASE_NAME}"
+        )
+
+    @property
+    def callback_url(self) -> str:
+        """Получить URL для callback от Payment Service."""
+        return (
+            f"http://{self.SERVICE_NAME}.{self.SERVICE_NAMESPACE}.svc:"
+            f"{self.SERVICE_PORT}/api/orders/payment-callback"
         )
 
 

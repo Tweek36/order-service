@@ -24,39 +24,6 @@ app/
 - **structlog** - структурированное логирование
 - **httpx** - async HTTP клиент
 
-## Установка и запуск
-
-### 1. Установка зависимостей
-
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Настройка переменных окружения
-
-Скопируйте `.env.example` в `.env` и заполните реальными значениями:
-
-```bash
-cp .env.example .env
-```
-
-Важные переменные:
-- `POSTGRES_USERNAME` - имя пользователя БД
-- `POSTGRES_PASSWORD` - пароль БД
-- `X_API_KEY` - API ключ для Capashino сервисов
-
-### 3. Применение миграций
-
-```bash
-alembic upgrade head
-```
-
-### 4. Запуск сервиса
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
 ## API Endpoints
 
 ### Создать заказ
@@ -106,42 +73,6 @@ GET /api/orders/{order_id}
 ### Health Check
 ```http
 GET /health
-```
-
-## Деплой в Kubernetes
-
-### 1. Создать Docker образ
-
-```bash
-docker build -t order-service:latest .
-```
-
-### 2. Push в registry
-
-```bash
-docker tag order-service:latest <registry>/order-service:latest
-docker push <registry>/order-service:latest
-```
-
-### 3. Применить манифесты Kubernetes
-
-Убедитесь, что переменные окружения настроены в LMS Portal:
-- `POSTGRES_USERNAME`
-- `POSTGRES_PASSWORD`
-- `X_API_KEY`
-- `KAFKA_BOOTSTRAP_SERVERS`
-
-### 4. Проверить статус
-
-```bash
-kubectl get pods -n student-tweek36-order-service
-kubectl logs -f <pod-name> -n student-tweek36-order-service
-```
-
-### 5. Применить миграции
-
-```bash
-kubectl exec -it <pod-name> -n student-tweek36-order-service -- alembic upgrade head
 ```
 
 ## Статусы заказа
@@ -210,22 +141,3 @@ pytest
 ruff check .
 mypy app
 ```
-
-## Шаг 1: Базовая архитектура ✅
-
-- [x] Domain слой
-- [x] Infrastructure слой (БД, Catalog клиент)
-- [x] Application слой (use cases)
-- [x] Presentation слой (API)
-- [x] Structlog логирование
-- [x] Alembic миграции
-
-## Следующие шаги
-
-**Шаг 2:** Payments Service интеграция
-**Шаг 3:** Kafka + Shipping Service
-**Шаг 4:** Notifications Service
-
-## Лицензия
-
-MIT

@@ -6,13 +6,13 @@ from uuid import uuid4
 
 import structlog
 
+from app.application.dto.catalog_dto import CatalogItem
 from app.application.dto.order_dto import CreateOrderDTO, OrderDTO
 from app.application.ports import ICatalogClient, INotificationsClient, IPaymentsClient
 from app.domain.enums import OrderStatus
 from app.domain.exceptions import InsufficientStockError
 from app.domain.models.order import Order
 from app.domain.repositories.order_repository import IOrderRepository
-from app.infrastructure.clients.catalog_client import CatalogItem
 
 logger = structlog.get_logger(__name__)
 

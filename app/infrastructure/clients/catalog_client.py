@@ -1,27 +1,17 @@
 """HTTP клиент для Catalog Service."""
 
-from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
 import structlog
 
+from app.application.dto.catalog_dto import CatalogItem
 from app.domain.exceptions import ItemNotFoundError
 from app.infrastructure.clients.base_client import BaseHTTPClient
 from app.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
-
-
-@dataclass
-class CatalogItem:
-    """Модель товара из каталога."""
-
-    id: UUID
-    name: str
-    price: Decimal
-    available_qty: int
 
 
 class CatalogClient(BaseHTTPClient):

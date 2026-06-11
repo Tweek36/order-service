@@ -1,28 +1,16 @@
 """HTTP клиент для Payments Service."""
 
-from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
 import structlog
 
+from app.application.dto.payments_dto import PaymentResponse
 from app.infrastructure.clients.base_client import BaseHTTPClient
 from app.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
-
-
-@dataclass
-class PaymentResponse:
-    """Ответ от Payments Service при создании платежа."""
-
-    id: UUID
-    user_id: str
-    order_id: UUID
-    amount: Decimal
-    status: str
-    idempotency_key: str
 
 
 class PaymentsClient(BaseHTTPClient):

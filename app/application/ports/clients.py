@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from decimal import Decimal
 from uuid import UUID
 
-from app.infrastructure.clients.catalog_client import CatalogItem
-from app.infrastructure.clients.payments_client import PaymentResponse
+from app.application.dto.catalog_dto import CatalogItem
+from app.application.dto.payments_dto import PaymentResponse
 
 
 class ICatalogClient(ABC):

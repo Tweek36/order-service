@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     @property
     def NOTIFICATIONS_SERVICE_URL(self) -> str:
         """URL для Notifications Service."""
-        return self.CAPASHINO_BASE_URL
+        return "http://student-system-capashino-web.student-system-capashino.svc:8000"
 
     # Kafka settings
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka.kafka.svc.cluster.local:9092"

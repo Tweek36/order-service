@@ -20,6 +20,9 @@ from app.domain.exceptions import (
     OrderNotFoundError,
 )
 from app.domain.repositories.order_repository import IOrderRepository
+from app.infrastructure.database.repositories.order_repository_impl import (
+    OrderRepositoryImpl,
+)
 from app.infrastructure.database.session import get_async_session
 from app.presentation.api.dependencies import (
     get_create_order_use_case,
@@ -43,10 +46,7 @@ async def create_order(
         # Если передан item_name вместо item_id, найдем товар по имени
         item_id = request.item_id
         if not item_id and request.item_name:
-            from app.infrastructure.clients.catalog_client import CatalogClient
-
-            catalog_client = CatalogClient()
-            catalog_item = await catalog_client.get_item_by_name(request.item_name)
+            catalog_item = await use_case.get_item_by_name(request.item_name)
             item_id = catalog_item.id
 
         if not item_id:
@@ -97,10 +97,6 @@ async def create_order(
             order_id=e.existing_order_id,
         )
         # Получаем существующий заказ из репозитория напрямую
-        from app.infrastructure.database.repositories.order_repository_impl import (
-            OrderRepositoryImpl,
-        )
-
         order_repo = OrderRepositoryImpl(session)
         existing_order = await order_repo.get_by_id(UUID(e.existing_order_id))
 

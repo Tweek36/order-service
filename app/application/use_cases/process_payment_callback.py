@@ -4,10 +4,9 @@ from uuid import UUID
 
 import structlog
 
+from app.application.ports import INotificationsClient, IOutboxRepository
 from app.domain.exceptions import OrderNotFoundError
 from app.domain.repositories.order_repository import IOrderRepository
-from app.infrastructure.clients.notifications_client import NotificationsClient
-from app.infrastructure.database.repositories.outbox_repository import OutboxRepository
 
 logger = structlog.get_logger(__name__)
 
@@ -18,8 +17,8 @@ class ProcessPaymentCallbackUseCase:
     def __init__(
         self,
         order_repository: IOrderRepository,
-        outbox_repository: OutboxRepository,
-        notifications_client: NotificationsClient,
+        outbox_repository: IOutboxRepository,
+        notifications_client: INotificationsClient,
     ):
         self.order_repository = order_repository
         self.outbox_repository = outbox_repository

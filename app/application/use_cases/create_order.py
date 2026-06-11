@@ -7,17 +7,14 @@ from uuid import uuid4
 import structlog
 
 from app.application.dto.order_dto import CreateOrderDTO, OrderDTO
+from app.application.ports import ICatalogClient, INotificationsClient, IPaymentsClient
 from app.domain.enums import OrderStatus
 from app.domain.exceptions import InsufficientStockError
 from app.domain.models.order import Order
 from app.domain.repositories.order_repository import IOrderRepository
-from app.infrastructure.clients.catalog_client import CatalogClient
-from app.infrastructure.clients.notifications_client import NotificationsClient
-from app.infrastructure.clients.payments_client import PaymentsClient
-from app.settings import get_settings
+from app.infrastructure.clients.catalog_client import CatalogItem
 
 logger = structlog.get_logger(__name__)
-settings = get_settings()
 
 
 class CreateOrderUseCase:
@@ -26,14 +23,16 @@ class CreateOrderUseCase:
     def __init__(
         self,
         order_repository: IOrderRepository,
-        catalog_client: CatalogClient,
-        payments_client: PaymentsClient,
-        notifications_client: NotificationsClient,
+        catalog_client: ICatalogClient,
+        payments_client: IPaymentsClient,
+        notifications_client: INotificationsClient,
+        callback_url: str,
     ):
         self.order_repository = order_repository
         self.catalog_client = catalog_client
         self.payments_client = payments_client
         self.notifications_client = notifications_client
+        self.callback_url = callback_url
 
     async def execute(self, dto: CreateOrderDTO) -> OrderDTO:
         """Создать новый заказ.
@@ -116,7 +115,7 @@ class CreateOrderUseCase:
             payment = await self.payments_client.create_payment(
                 order_id=order.id,
                 amount=amount,
-                callback_url=settings.callback_url,
+                callback_url=self.callback_url,
                 idempotency_key=dto.idempotency_key,
             )
 
@@ -150,3 +149,7 @@ class CreateOrderUseCase:
             created_at=order.created_at,
             updated_at=order.updated_at,
         )
+
+    async def get_item_by_name(self, item_name: str) -> CatalogItem:
+        """Получить товар по имени."""
+        return await self.catalog_client.get_item_by_name(item_name)

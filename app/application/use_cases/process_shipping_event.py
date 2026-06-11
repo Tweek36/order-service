@@ -6,10 +6,9 @@ from app.application.dto.shipping_event_dto import (
     OrderCancelledEventDTO,
     OrderShippedEventDTO,
 )
+from app.application.ports import IInboxRepository, INotificationsClient
 from app.domain.exceptions import OrderNotFoundError
 from app.domain.repositories.order_repository import IOrderRepository
-from app.infrastructure.clients.notifications_client import NotificationsClient
-from app.infrastructure.database.repositories.inbox_repository import InboxRepository
 
 logger = structlog.get_logger(__name__)
 
@@ -20,8 +19,8 @@ class ProcessShippingEventUseCase:
     def __init__(
         self,
         order_repository: IOrderRepository,
-        inbox_repository: InboxRepository,
-        notifications_client: NotificationsClient,
+        inbox_repository: IInboxRepository,
+        notifications_client: INotificationsClient,
     ):
         self.order_repository = order_repository
         self.inbox_repository = inbox_repository

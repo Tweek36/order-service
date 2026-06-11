@@ -4,7 +4,7 @@ from uuid import UUID
 
 import structlog
 
-from app.infrastructure.clients.notifications_client import NotificationsClient
+from app.application.ports import INotificationsClient
 
 logger = structlog.get_logger(__name__)
 
@@ -12,7 +12,7 @@ logger = structlog.get_logger(__name__)
 class SendNotificationUseCase:
     """Use case для отправки уведомлений пользователям."""
 
-    def __init__(self, notifications_client: NotificationsClient):
+    def __init__(self, notifications_client: INotificationsClient):
         self.notifications_client = notifications_client
 
     async def execute(
@@ -20,13 +20,16 @@ class SendNotificationUseCase:
         order_id: UUID,
         message: str,
         idempotency_key: str,
-    ) -> None:
+    ) -> dict | None:
         """Отправить уведомление.
 
         Args:
             order_id: ID заказа
             message: Текст уведомления
             idempotency_key: Ключ идемпотентности
+
+        Returns:
+            Данные созданного уведомления или None в случае ошибки
         """
         try:
             result = await self.notifications_client.send_notification(
@@ -46,6 +49,7 @@ class SendNotificationUseCase:
                     "notification_send_failed_but_not_blocking",
                     order_id=str(order_id),
                 )
+            return result
         except Exception as e:
             # Не блокируем основной процесс, только логируем
             await logger.aerror(
@@ -53,3 +57,4 @@ class SendNotificationUseCase:
                 order_id=str(order_id),
                 error=str(e),
             )
+            return None
